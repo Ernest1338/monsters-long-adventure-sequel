@@ -279,7 +279,6 @@ local function prologue()
     print_fancy("who would have thought?", SPEED.NORMAL, 500)
     print_fancy("unsuprisingly, everyone", SPEED.NORMAL, 500)
     print_fancy("with that said, let's hop right into the game!", SPEED.NORMAL, 2000)
-    --print_fancy("what the FUCK was that? idk lets start", SPEED.NORMAL, 2000)
     reset_color()
 end
 
@@ -348,11 +347,13 @@ local function handle_position(direction)
     local current_event = nil
     for _, event in pairs(EVENTS) do
         if event.x == CURRENT_POS.X and event.y == CURRENT_POS.Y then
+            -- TODO: to support multiple events on the same block, insert event into a table
             current_event = event
             break
         end
     end
     if current_event ~= nil then
+        -- TODO: handle multiple events, from a table (see TODO some lines up)
         handle_event(current_event)
     end
 end
