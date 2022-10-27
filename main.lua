@@ -4,7 +4,7 @@
 
 TODOs:
 - equipement (backpack system, equip items (change stats))
-- look arouund (special events)
+- look around (special events)
 - eating gives XP? (or xp potions)
 
 level system:
@@ -60,6 +60,7 @@ TEXT_BUFFER = {}
 STATE = {
     normal = COLOR.green .. "[>]",
     fight = COLOR.red .. "[!]",
+    confirm = COLOR.blue .. "[?]"
     --DEBUG = "DEBUG",
 }
 
@@ -310,7 +311,7 @@ local function handle_event(event)
 end
 
 local function handle_position(direction)
-    -- this can shurely be improved
+    -- this can surely be improved
     direction = string.lower(direction)
     if direction == "north" or direction == "n" or direction == "up" or direction == "u" then
         local map_element = MAIN_MAP[CURRENT_POS.Y - 1][CURRENT_POS.X]
@@ -362,23 +363,25 @@ local function render_map()
     local view_distance = 4
     io.write("\u{250c}")
     for _ = 0, view_distance * 2 do
-        io.write("\u{2500}")
+        io.write("\u{2500}\u{2500}")
     end
     print("\u{2510}")
     for y = CURRENT_POS.Y - view_distance, CURRENT_POS.Y + view_distance do
         io.write("\u{2502}")
         for x = CURRENT_POS.X - view_distance, CURRENT_POS.X + view_distance do
             if MAIN_MAP[y] == nil or MAIN_MAP[y][x] == nil then
-                io.write("█")
+                io.write("██")
             else
                 if y == CURRENT_POS.Y and x == CURRENT_POS.X then
-                    --io.write("\u{1f643}")
-                    io.write("!")
+                    io.write("\u{1f643}")
+                    --io.write("\u{FF30}")
                 else
                     if MAIN_MAP[y][x] == "#" then
-                        io.write("█")
+                        io.write("██")
+                    elseif MAIN_MAP[y][x] == "*" then
+                        io.write("\u{FF0A}")
                     else
-                        io.write(MAIN_MAP[y][x])
+                        io.write(string.rep(MAIN_MAP[y][x], 2))
                     end
                 end
             end
@@ -387,7 +390,7 @@ local function render_map()
     end
     io.write("\u{2514}")
     for _ = 0, view_distance * 2 do
-        io.write("\u{2500}")
+        io.write("\u{2500}\u{2500}")
     end
     print("\u{2518}")
 end
@@ -421,8 +424,10 @@ local function use(item)
         end
         if healing_ammount == 0 then
             render_map()
+            CURRENT_STATE = STATE.confirm
             print("You have reached max health, are you sure you want to use this item? (y/n)")
             local heal_choice = prompt()
+            CURRENT_STATE = STATE.normal
             if heal_choice ~= "y" then
                 should_heal = false
                 print_text("Aborting using item")
