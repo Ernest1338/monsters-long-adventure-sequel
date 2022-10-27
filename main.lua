@@ -44,11 +44,11 @@ Current_pos = {
 
 ESCAPE_CHAR = string.char(27)
 
-Events = require("events")
-Items = require("items")
-Monsters = require("monsters")
-Color = require("colors")
-Maps = require("maps")
+Events = require("src/events")
+Items = require("src/items")
+Monsters = require("src/monsters")
+Color = require("src/colors")
+Maps = require("src/maps")
 
 Speed = {
     normal = 1,
@@ -525,7 +525,7 @@ function Main()
     debug(dump_table(Monsters))
     debug(dump_table(Maps.main.data))
     debug("PRESS ANY KEY TO START THE GAME")
-    debug(prompt())
+    if Is_debug then prompt() end
 
     if not Skip_prologue then
         sleep(1000)
