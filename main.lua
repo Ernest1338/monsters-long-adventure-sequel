@@ -21,57 +21,58 @@ sleep mechanic for hp restore (potions and food to restore hp in a fight)
 
 ]] --
 
--- i think they should be globals (CAPS)
-local is_debug = false
+Is_debug = false
 if os.getenv("DEBUG") then
-    is_debug = true
+    Is_debug = true
 end
 
-local skip_delays = false
+Skip_delays = false
 if os.getenv("SKIP_DELAYS") then
-    skip_delays = true
+    Skip_delays = true
 end
 
-local skip_prologue = false
+Skip_prologue = false
 if os.getenv("SKIP_PROLOGUE") then
-    skip_prologue = true
+    Skip_prologue = true
 end
 
-CURRENT_POS = {
-    Y = 19,
-    X = 11,
+Current_pos = {
+    y = 19,
+    x = 11,
 }
+
 MAP_SIZE = 20
+ESCAPE_CHAR = string.char(27)
 
-EVENTS = require("events")
-ITEMS = require("items")
-MONSTERS = require("monsters")
-COLOR = require("colors")
+Events = require("events")
+Items = require("items")
+Monsters = require("monsters")
+Color = require("colors")
 
-SPEED = {
-    NORMAL = 1,
-    SLOW = 2,
-    FAST = 0.5,
-    INSTANT = 0,
+Speed = {
+    normal = 1,
+    slow = 2,
+    fast = 0.5,
+    instant = 0,
 }
 
-TEXT_BUFFER = {}
--- CURSOR_POS_BUFFER = { x = 1, y = 1 }
+Text_buffer = {}
+-- Cursor_pos_buffer = { x = 1, y = 1 }
 
-STATE = {
-    normal = COLOR.green .. "[>]",
-    fight = COLOR.red .. "[!]",
-    confirm = COLOR.blue .. "[?]"
-    --DEBUG = "DEBUG",
+State = {
+    normal = Color.green .. "[>]",
+    fight = Color.red .. "[!]",
+    confirm = Color.blue .. "[?]"
+    --debug = "DEBUG",
 }
 
-CURRENT_STATE = STATE.normal
+Current_state = State.normal
 
-PLAYER = {
+Player = {
     health = 100,
     max_hp = 140,
     -- default backpack
-    backpack = { ITEMS.potion, ITEMS.bread },
+    backpack = { Items.potion, Items.bread },
     attack = 10,
     level = 1,
     xp = 0,
@@ -82,36 +83,36 @@ local function sleep(ms)
     if ms == 0 then
         skip = true
     end
-    if not skip_delays and not skip then
+    if not Skip_delays and not skip then
         -- still not perfect but must do for now
         local timer = assert(io.popen("sleep " .. ms / 1000))
         timer:close()
     end
 end
 
-local function setCursorPos(x, y)
-    io.write(string.char(27) .. "[" .. y .. ";" .. x .. "H")
+local function set_cursor_pos(x, y)
+    io.write(ESCAPE_CHAR .. "[" .. y .. ";" .. x .. "H")
 end
 
-local function saveCursorPos()
-    io.write(string.char(27) .. "[s")
+local function save_cursor_pos()
+    io.write(ESCAPE_CHAR .. "[s")
 end
 
-local function restoreCursorPos()
-    io.write(string.char(27) .. "[u")
+local function restore_cursor_pos()
+    io.write(ESCAPE_CHAR .. "[u")
 end
 
 -- TODO: This shouldn't use saveCursorPos() because it may overwrite user's wanted data
 local function print_in_pos(text, pos)
-    saveCursorPos()
-    setCursorPos(pos[1], pos[2])
+    save_cursor_pos()
+    set_cursor_pos(pos[1], pos[2])
     io.write(text)
-    restoreCursorPos()
+    restore_cursor_pos()
 end
 
 local function print_fancy(message, speed, after_sleep)
     if speed == nil then
-        speed = SPEED.INSTANT
+        speed = Speed.instant
     end
     for i = 1, #message do
         local char = string.sub(message, i, i)
@@ -135,11 +136,11 @@ local function print_fancy(message, speed, after_sleep)
 end
 
 local function insert_into_text_buffer(text_object)
-    table.insert(TEXT_BUFFER, text_object)
+    table.insert(Text_buffer, text_object)
 end
 
 local function print_text(text, speed, delay)
-    local speed_local = SPEED.INSTANT
+    local speed_local = Speed.instant
     if speed ~= nil then
         speed_local = speed
     end
@@ -151,8 +152,8 @@ local function print_text(text, speed, delay)
 end
 
 local function handle_text_buffer()
-    for _, obj in pairs(TEXT_BUFFER) do
-        local speed = SPEED.INSTANT
+    for _, obj in pairs(Text_buffer) do
+        local speed = Speed.instant
         if obj.speed ~= nil then
             speed = obj.speed
         end
@@ -162,7 +163,7 @@ local function handle_text_buffer()
         end
         print_fancy(obj.data, speed, delay)
     end
-    TEXT_BUFFER = {}
+    Text_buffer = {}
 end
 
 local function set_color(color)
@@ -171,12 +172,12 @@ local function set_color(color)
 end
 
 local function reset_color()
-    io.write(COLOR.reset)
+    io.write(Color.reset)
     io.flush()
 end
 
 local function debug(message)
-    if is_debug then
+    if Is_debug then
         print("[DEBUG] " .. message)
     end
 end
@@ -199,8 +200,7 @@ local function dump_table(o)
 end
 
 local function clear_screen()
-    local escape_char = string.char(27)
-    io.write(escape_char .. "[1;1H" .. escape_char .. "[2J")
+    io.write(ESCAPE_CHAR .. "[1;1H" .. ESCAPE_CHAR .. "[2J")
     io.flush()
 end
 
@@ -237,10 +237,10 @@ local function load_map(map_name)
     return map
 end
 
-MAIN_MAP = load_map("main_map")
+Main_map = load_map("main_map")
 
 local function prompt()
-    io.write(CURRENT_STATE .. COLOR.reset .. " ")
+    io.write(Current_state .. Color.reset .. " ")
     return io.stdin.read(io.stdin)
 end
 
@@ -265,7 +265,7 @@ end
 
 local function print_help_screen()
     print_text("Currently available actions:")
-    if CURRENT_STATE == STATE.normal then
+    if Current_state == State.normal then
         print_text([[    move in a direction (north, east, south, west) - go, g
     use an item                                    - use, u
     backpack contents                              - backpack, b
@@ -273,7 +273,7 @@ local function print_help_screen()
     clear the screen                               - clear
     display this help screen                       - help, ?
     exit from the game                             - quit, q]])
-    elseif CURRENT_STATE == STATE.fight then
+    elseif Current_state == State.fight then
         -- TODO: handle_attack func, different types of attack (pokemon style)
         print_text([[    attack                   - attack, a
     run away                 - run, r
@@ -287,25 +287,25 @@ local function print_help_screen()
 end
 
 local function prologue()
-    set_color(COLOR.gold)
-    print_fancy("Once upon a time, there was nothing, but pure evilness", SPEED.NORMAL, 500)
-    print_fancy("and the culpruit was, no surprice, " .. COLOR.blue .. "sonic the hedgehog", SPEED.NORMAL, 500)
-    set_color(COLOR.gold)
-    print_fancy("this time it was no a clear case of beeing bad", SPEED.NORMAL, 500)
-    print_fancy("it was even worse...\n", SPEED.NORMAL, 500)
-    set_color(COLOR.blue)
-    print_fancy("sonic", SPEED.SLOW, 1000)
-    set_color(COLOR.light_pink)
-    print_fancy("was gay!\n", SPEED.NORMAL, 1000)
-    set_color(COLOR.gold)
-    print_fancy("who would have thought?", SPEED.NORMAL, 500)
-    print_fancy("unsuprisingly, everyone", SPEED.NORMAL, 500)
-    print_fancy("with that said, let's hop right into the game!", SPEED.NORMAL, 2000)
+    set_color(Color.gold)
+    print_fancy("Once upon a time, there was nothing, but pure evilness", Speed.normal, 500)
+    print_fancy("and the culpruit was, no surprice, " .. Color.blue .. "sonic the hedgehog", Speed.normal, 500)
+    set_color(Color.gold)
+    print_fancy("this time it was no a clear case of beeing bad", Speed.normal, 500)
+    print_fancy("it was even worse...\n", Speed.normal, 500)
+    set_color(Color.blue)
+    print_fancy("sonic", Speed.slow, 1000)
+    set_color(Color.light_pink)
+    print_fancy("was gay!\n", Speed.normal, 1000)
+    set_color(Color.gold)
+    print_fancy("who would have thought?", Speed.normal, 500)
+    print_fancy("unsuprisingly, everyone", Speed.normal, 500)
+    print_fancy("with that said, let's hop right into the game!", Speed.normal, 2000)
     reset_color()
 end
 
 local function item_name_to_object(name)
-    for item_name, item in pairs(ITEMS) do
+    for item_name, item in pairs(Items) do
         if name == item_name then
             return item
         end
@@ -315,18 +315,18 @@ end
 
 local function handle_event(event)
     if event.finished == true then return end
-    print_text(event.data, SPEED.NORMAL)
+    print_text(event.data, Speed.normal)
     local finish_data = split_into_words(event.on_finish)
     if finish_data[1] == "backpack" then
         if finish_data[2] == "add" then
             -- TODO: probably should export adding item to a function
             local item = item_name_to_object(finish_data[3])
             if item == nil then return end
-            table.insert(PLAYER.backpack, item)
+            table.insert(Player.backpack, item)
             print_text("\n" ..
-                COLOR.cyan .. "Backpack: " .. COLOR.yellow .. "+" .. item.name .. COLOR.reset .. "\n")
+                Color.cyan .. "Backpack: " .. Color.yellow .. "+" .. item.name .. Color.reset .. "\n")
             event.finished = true
-            MAIN_MAP[event.y][event.x] = " "
+            Main_map[event.y][event.x] = " "
         end
     end
 end
@@ -335,40 +335,40 @@ local function handle_position(direction)
     -- this can surely be improved
     direction = string.lower(direction)
     if direction == "north" or direction == "n" or direction == "up" or direction == "u" then
-        local map_element = MAIN_MAP[CURRENT_POS.Y - 1][CURRENT_POS.X]
+        local map_element = Main_map[Current_pos.y - 1][Current_pos.x]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
-        CURRENT_POS.Y = CURRENT_POS.Y - 1
+        Current_pos.y = Current_pos.y - 1
     elseif direction == "east" or direction == "e" or direction == "right" or direction == "r" then
-        local map_element = MAIN_MAP[CURRENT_POS.Y][CURRENT_POS.X + 1]
+        local map_element = Main_map[Current_pos.y][Current_pos.x + 1]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
-        CURRENT_POS.X = CURRENT_POS.X + 1
+        Current_pos.x = Current_pos.x + 1
     elseif direction == "south" or direction == "s" or direction == "down" or direction == "d" then
-        local map_element = MAIN_MAP[CURRENT_POS.Y + 1][CURRENT_POS.X]
+        local map_element = Main_map[Current_pos.y + 1][Current_pos.x]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
-        CURRENT_POS.Y = CURRENT_POS.Y + 1
+        Current_pos.y = Current_pos.y + 1
     elseif direction == "west" or direction == "w" or direction == "left" or direction == "l" then
-        local map_element = MAIN_MAP[CURRENT_POS.Y][CURRENT_POS.X - 1]
+        local map_element = Main_map[Current_pos.y][Current_pos.x - 1]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
-        CURRENT_POS.X = CURRENT_POS.X - 1
+        Current_pos.x = Current_pos.x - 1
     else
         print_text("Unknown direction")
         return
     end
     local current_event = nil
-    for _, event in pairs(EVENTS) do
-        if event.x == CURRENT_POS.X and event.y == CURRENT_POS.Y then
+    for _, event in pairs(Events) do
+        if event.x == Current_pos.x and event.y == Current_pos.y then
             -- TODO: to support multiple events on the same block, insert event into a table
             current_event = event
             break
@@ -387,22 +387,22 @@ local function render_map()
         io.write("\u{2500}\u{2500}")
     end
     print("\u{2510}")
-    for y = CURRENT_POS.Y - view_distance, CURRENT_POS.Y + view_distance do
+    for y = Current_pos.y - view_distance, Current_pos.y + view_distance do
         io.write("\u{2502}")
-        for x = CURRENT_POS.X - view_distance, CURRENT_POS.X + view_distance do
-            if MAIN_MAP[y] == nil or MAIN_MAP[y][x] == nil then
+        for x = Current_pos.x - view_distance, Current_pos.x + view_distance do
+            if Main_map[y] == nil or Main_map[y][x] == nil then
                 io.write("██")
             else
-                if y == CURRENT_POS.Y and x == CURRENT_POS.X then
+                if y == Current_pos.y and x == Current_pos.x then
                     io.write("\u{1f643}")
                     --io.write("\u{FF30}")
                 else
-                    if MAIN_MAP[y][x] == "#" then
+                    if Main_map[y][x] == "#" then
                         io.write("██")
-                    elseif MAIN_MAP[y][x] == "*" then
+                    elseif Main_map[y][x] == "*" then
                         io.write("\u{FF0A}")
                     else
-                        io.write(string.rep(MAIN_MAP[y][x], 2))
+                        io.write(string.rep(Main_map[y][x], 2))
                     end
                 end
             end
@@ -419,9 +419,9 @@ end
 local function render_stats()
     local offset_x = 30
     local offset_y = 2
-    print_in_pos(COLOR.red          .. "Health " .. PLAYER.health .. " / " .. PLAYER.max_hp, { offset_x, offset_y })
-    print_in_pos(COLOR.light_blue   .. "Level " .. PLAYER.level, { offset_x, offset_y + 1 })
-    print_in_pos(COLOR.light_green  .. "Attack " .. PLAYER.attack .. COLOR.reset, { offset_x, offset_y + 2 })
+    print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
+    print_in_pos(Color.light_blue .. "Level " .. Player.level, { offset_x, offset_y + 1 })
+    print_in_pos(Color.light_green .. "Attack " .. Player.attack .. Color.reset, { offset_x, offset_y + 2 })
 end
 
 local function render_ui()
@@ -430,22 +430,22 @@ local function render_ui()
 end
 
 local function show_backpack()
-    local string_to_write = COLOR.cyan .. "Backpack: " .. COLOR.reset
-    for i, item in pairs(PLAYER.backpack) do
-        if i == #PLAYER.backpack then
+    local string_to_write = Color.cyan .. "Backpack: " .. Color.reset
+    for i, item in pairs(Player.backpack) do
+        if i == #Player.backpack then
             string_to_write = string_to_write .. item.name
         else
             string_to_write = string_to_write .. item.name .. ", "
         end
     end
-    if #PLAYER.backpack == 0 then
+    if #Player.backpack == 0 then
         string_to_write = string_to_write .. "<EMPTY>"
     end
     print_text(string_to_write)
 end
 
 local function use(item)
-    if not table_contains(PLAYER.backpack, item) then
+    if not table_contains(Player.backpack, item) then
         print_text("You don't have any " .. item.name .. " in your backpack!")
         return
     end
@@ -453,15 +453,15 @@ local function use(item)
     if item.type == "consumable" then
         local should_heal = true
         local healing_ammount = item.value
-        if PLAYER.health + item.value > PLAYER.max_hp then
-            healing_ammount = PLAYER.max_hp - PLAYER.health
+        if Player.health + item.value > Player.max_hp then
+            healing_ammount = Player.max_hp - Player.health
         end
         if healing_ammount == 0 then
             render_ui()
-            CURRENT_STATE = STATE.confirm
+            Current_state = State.confirm
             print("You have reached max health, are you sure you want to use this item? (y/n)")
             local heal_choice = prompt()
-            CURRENT_STATE = STATE.normal
+            Current_state = State.normal
             if heal_choice ~= "y" then
                 should_heal = false
                 print_text("Aborting using item")
@@ -469,11 +469,11 @@ local function use(item)
             clear_screen()
         end
         if should_heal == false then return end
-        PLAYER.health = PLAYER.health + healing_ammount
+        Player.health = Player.health + healing_ammount
         print_text("Used " .. item.name .. "! Restored " .. healing_ammount .. " health points")
-        for v, backpack_item in ipairs(PLAYER.backpack) do
+        for v, backpack_item in ipairs(Player.backpack) do
             if item == backpack_item then
-                table.remove(PLAYER.backpack, v)
+                table.remove(Player.backpack, v)
                 return
             end
         end
@@ -483,11 +483,11 @@ end
 local function print_player_stats()
     print_text("Your player stats:")
     -- TODO: highlight color based on ammount of health (<10% then red, >80% green, else white)
-    print_text("    " .. COLOR.red .. "health" .. COLOR.reset .. ": " .. PLAYER.health)
-    for v, stat in pairs(PLAYER) do
+    print_text("    " .. Color.red .. "health" .. Color.reset .. ": " .. Player.health)
+    for v, stat in pairs(Player) do
         if v ~= "backpack" and v ~= "health" then
             -- TODO: level xp X out of X for the next level
-            print_text("    " .. COLOR.cyan .. v .. COLOR.reset .. ": " .. stat)
+            print_text("    " .. Color.cyan .. v .. Color.reset .. ": " .. stat)
         end
     end
 end
@@ -497,7 +497,7 @@ local function handle_action(action)
     if action[1] == "quit" or action[1] == "q" then
         -- TODO: save state
         -- TODO: ask: are you sure you want to quit? make sure you saved your game
-        set_color(COLOR.yellow)
+        set_color(Color.yellow)
         print("\nBye bye!\n")
         reset_color()
         os.exit(0)
@@ -529,20 +529,20 @@ local function handle_action(action)
         print_player_stats()
     else
         print_text("Action not found, type \"" ..
-            COLOR.cyan .. "help" .. COLOR.reset .. "\" for action list")
+            Color.cyan .. "help" .. Color.reset .. "\" for action list")
     end
 end
 
 function Main()
     clear_screen()
 
-    debug(dump_table(EVENTS))
-    debug(dump_table(ITEMS))
-    debug(dump_table(MONSTERS))
-    debug(dump_table(MAIN_MAP))
-    debug(dump_table(CURRENT_POS))
+    debug(dump_table(Events))
+    debug(dump_table(Items))
+    debug(dump_table(Monsters))
+    debug(dump_table(Main_map))
+    debug(dump_table(Current_pos))
 
-    if not skip_prologue then
+    if not Skip_prologue then
         sleep(1000)
         prologue()
         welcome_screen()
@@ -562,8 +562,8 @@ function Main()
         handle_text_buffer()
         user_input = prompt()
 
-        debug(dump_table(PLAYER))
-        debug(dump_table(CURRENT_POS))
+        debug(dump_table(Player))
+        debug(dump_table(Current_pos))
     end
 end
 

@@ -1,4 +1,4 @@
-TYPE = {
+Type = {
     consumable = "consumable",
     sword = "sword",
     helmet = "helmet",
@@ -7,7 +7,7 @@ TYPE = {
     boots = "boots",
 }
 
-RARITY = {
+Rarity = {
     common = "common",
     rare = "rare",
     very_rare = "very_rare",
@@ -16,12 +16,12 @@ RARITY = {
     unique = "unique",
 }
 
-ITEMS = {
-    potion = { name = "potion", type = TYPE.consumable, rarity = RARITY.rare, value = 50 },
-    bread = { name = "bread", type = TYPE.consumable, rarity = RARITY.common, value = 25 },
-    apple = { name = "apple", type = TYPE.consumable, rarity = RARITY.common, value = 25 },
-    rice = { name = "rice", type = TYPE.consumable, rarity = RARITY.common, value = 25 },
-    potato = { name = "potato", type = TYPE.consumable, rarity = RARITY.common, value = 25 },
+Items = {
+    potion = { name = "potion", type = Type.consumable, rarity = Rarity.rare, value = 50 },
+    bread = { name = "bread", type = Type.consumable, rarity = Rarity.common, value = 25 },
+    apple = { name = "apple", type = Type.consumable, rarity = Rarity.common, value = 25 },
+    rice = { name = "rice", type = Type.consumable, rarity = Rarity.common, value = 25 },
+    potato = { name = "potato", type = Type.consumable, rarity = Rarity.common, value = 25 },
 }
 
-return ITEMS
+return Items

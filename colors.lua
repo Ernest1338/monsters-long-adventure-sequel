@@ -1,5 +1,5 @@
 local escape_char = string.char(27)
-COLOR = {
+Color = {
     black = escape_char .. "[30m",
     red = escape_char .. "[31m",
     green = escape_char .. "[32m",
@@ -25,4 +25,4 @@ COLOR = {
     reset = escape_char .. "[00m",
 }
 
-return COLOR
+return Color
