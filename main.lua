@@ -56,6 +56,7 @@ SPEED = {
 }
 
 TEXT_BUFFER = {}
+-- CURSOR_POS_BUFFER = { x = 1, y = 1 }
 
 STATE = {
     normal = COLOR.green .. "[>]",
@@ -86,6 +87,26 @@ local function sleep(ms)
         local timer = assert(io.popen("sleep " .. ms / 1000))
         timer:close()
     end
+end
+
+local function setCursorPos(x, y)
+    io.write(string.char(27) .. "[" .. y .. ";" .. x .. "H")
+end
+
+local function saveCursorPos()
+    io.write(string.char(27) .. "[s")
+end
+
+local function restoreCursorPos()
+    io.write(string.char(27) .. "[u")
+end
+
+-- TODO: This shouldn't use saveCursorPos() because it may overwrite user's wanted data
+local function print_in_pos(text, pos)
+    saveCursorPos()
+    setCursorPos(pos[1], pos[2])
+    io.write(text)
+    restoreCursorPos()
 end
 
 local function print_fancy(message, speed, after_sleep)
@@ -395,6 +416,19 @@ local function render_map()
     print("\u{2518}")
 end
 
+local function render_stats()
+    local offset_x = 30
+    local offset_y = 2
+    print_in_pos(COLOR.red          .. "Health " .. PLAYER.health .. " / " .. PLAYER.max_hp, { offset_x, offset_y })
+    print_in_pos(COLOR.light_blue   .. "Level " .. PLAYER.level, { offset_x, offset_y + 1 })
+    print_in_pos(COLOR.light_green  .. "Attack " .. PLAYER.attack .. COLOR.reset, { offset_x, offset_y + 2 })
+end
+
+local function render_ui()
+    render_map()
+    render_stats()
+end
+
 local function show_backpack()
     local string_to_write = COLOR.cyan .. "Backpack: " .. COLOR.reset
     for i, item in pairs(PLAYER.backpack) do
@@ -423,7 +457,7 @@ local function use(item)
             healing_ammount = PLAYER.max_hp - PLAYER.health
         end
         if healing_ammount == 0 then
-            render_map()
+            render_ui()
             CURRENT_STATE = STATE.confirm
             print("You have reached max health, are you sure you want to use this item? (y/n)")
             local heal_choice = prompt()
@@ -515,7 +549,7 @@ function Main()
         sleep(5000)
     end
     clear_screen()
-    render_map()
+    render_ui()
     print("type \"help\" to get action list")
 
     local user_input = prompt()
@@ -524,7 +558,7 @@ function Main()
     while true do
         clear_screen()
         handle_action(user_input)
-        render_map()
+        render_ui()
         handle_text_buffer()
         user_input = prompt()
 
