@@ -41,7 +41,6 @@ Current_pos = {
     x = 11,
 }
 
-MAP_SIZE = 20
 ESCAPE_CHAR = string.char(27)
 
 Events = require("events")
