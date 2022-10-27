@@ -21,14 +21,15 @@ sleep mechanic for hp restore (potions and food to restore hp in a fight)
 
 ]] --
 
-Is_debug = false
-if os.getenv("DEBUG") then
-    Is_debug = true
-end
-
 Skip_delays = false
 if os.getenv("SKIP_DELAYS") then
     Skip_delays = true
+end
+
+Is_debug = false
+if os.getenv("DEBUG") then
+    Is_debug = true
+    Skip_delays = true -- automatically skip delays when in debug mode
 end
 
 Skip_prologue = false
@@ -47,6 +48,7 @@ Events = require("events")
 Items = require("items")
 Monsters = require("monsters")
 Color = require("colors")
+Maps = require("maps")
 
 Speed = {
     normal = 1,
@@ -220,24 +222,7 @@ local function split_into_words(str)
     return words
 end
 
-local function load_map(map_name)
-    local map = {}
-    local map_file = map_name .. ".txt"
-    debug("map_file: " .. map_file)
-    local index = 1
-    for line in io.lines(map_file) do
-        table.insert(map, {})
-        for i = 1, #line do
-            local c = line:sub(i, i)
-            table.insert(map[index], c)
-        end
-        index = index + 1
-    end
-    return map
-end
-
-Main_map = load_map("main_map")
-
+-- TODO: support this usecase: prompt(State.confirm)
 local function prompt()
     io.write(Current_state .. Color.reset .. " ")
     return io.stdin.read(io.stdin)
@@ -325,7 +310,7 @@ local function handle_event(event)
             print_text("\n" ..
                 Color.cyan .. "Backpack: " .. Color.yellow .. "+" .. item.name .. Color.reset .. "\n")
             event.finished = true
-            Main_map[event.y][event.x] = " "
+            Maps.main.data[event.y][event.x] = " "
         end
     end
 end
@@ -334,28 +319,28 @@ local function handle_position(direction)
     -- this can surely be improved
     direction = string.lower(direction)
     if direction == "north" or direction == "n" or direction == "up" or direction == "u" then
-        local map_element = Main_map[Current_pos.y - 1][Current_pos.x]
+        local map_element = Maps.main.data[Current_pos.y - 1][Current_pos.x]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
         Current_pos.y = Current_pos.y - 1
     elseif direction == "east" or direction == "e" or direction == "right" or direction == "r" then
-        local map_element = Main_map[Current_pos.y][Current_pos.x + 1]
+        local map_element = Maps.main.data[Current_pos.y][Current_pos.x + 1]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
         Current_pos.x = Current_pos.x + 1
     elseif direction == "south" or direction == "s" or direction == "down" or direction == "d" then
-        local map_element = Main_map[Current_pos.y + 1][Current_pos.x]
+        local map_element = Maps.main.data[Current_pos.y + 1][Current_pos.x]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
         Current_pos.y = Current_pos.y + 1
     elseif direction == "west" or direction == "w" or direction == "left" or direction == "l" then
-        local map_element = Main_map[Current_pos.y][Current_pos.x - 1]
+        local map_element = Maps.main.data[Current_pos.y][Current_pos.x - 1]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
@@ -389,19 +374,19 @@ local function render_map()
     for y = Current_pos.y - view_distance, Current_pos.y + view_distance do
         io.write("\u{2502}")
         for x = Current_pos.x - view_distance, Current_pos.x + view_distance do
-            if Main_map[y] == nil or Main_map[y][x] == nil then
+            if Maps.main.data[y] == nil or Maps.main.data[y][x] == nil then
                 io.write("██")
             else
                 if y == Current_pos.y and x == Current_pos.x then
                     io.write("\u{1f643}")
                     --io.write("\u{FF30}")
                 else
-                    if Main_map[y][x] == "#" then
+                    if Maps.main.data[y][x] == "#" then
                         io.write("██")
-                    elseif Main_map[y][x] == "*" then
+                    elseif Maps.main.data[y][x] == "*" then
                         io.write("\u{FF0A}")
                     else
-                        io.write(string.rep(Main_map[y][x], 2))
+                        io.write(string.rep(Maps.main.data[y][x], 2))
                     end
                 end
             end
@@ -538,8 +523,9 @@ function Main()
     debug(dump_table(Events))
     debug(dump_table(Items))
     debug(dump_table(Monsters))
-    debug(dump_table(Main_map))
-    debug(dump_table(Current_pos))
+    debug(dump_table(Maps.main.data))
+    debug("PRESS ANY KEY TO START THE GAME")
+    debug(prompt())
 
     if not Skip_prologue then
         sleep(1000)
@@ -559,10 +545,11 @@ function Main()
         handle_action(user_input)
         render_ui()
         handle_text_buffer()
-        user_input = prompt()
 
         debug(dump_table(Player))
         debug(dump_table(Current_pos))
+
+        user_input = prompt()
     end
 end
 
