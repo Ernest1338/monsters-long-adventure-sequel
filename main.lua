@@ -41,6 +41,7 @@ Current_pos = {
     y = 19,
     x = 11,
 }
+View_distance = 4
 
 ESCAPE_CHAR = string.char(27)
 
@@ -365,15 +366,14 @@ local function handle_position(direction)
 end
 
 local function render_map()
-    local view_distance = 4
     io.write("\u{250c}")
-    for _ = 0, view_distance * 2 do
+    for _ = 0, View_distance * 2 do
         io.write("\u{2500}\u{2500}")
     end
     print("\u{2510}")
-    for y = Current_pos.y - view_distance, Current_pos.y + view_distance do
+    for y = Current_pos.y - View_distance, Current_pos.y + View_distance do
         io.write("\u{2502}")
-        for x = Current_pos.x - view_distance, Current_pos.x + view_distance do
+        for x = Current_pos.x - View_distance, Current_pos.x + View_distance do
             if Maps.main.data[y] == nil or Maps.main.data[y][x] == nil then
                 io.write("██")
             else
@@ -394,14 +394,15 @@ local function render_map()
         print("\u{2502}")
     end
     io.write("\u{2514}")
-    for _ = 0, view_distance * 2 do
+    for _ = 0, View_distance * 2 do
         io.write("\u{2500}\u{2500}")
     end
     print("\u{2518}")
 end
 
 local function render_stats()
-    local offset_x = 30
+    --local offset_x = 30
+    local offset_x = View_distance * 4 + 8
     local offset_y = 2
     print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
     print_in_pos(Color.light_blue .. "Level " .. Player.level, { offset_x, offset_y + 1 })
