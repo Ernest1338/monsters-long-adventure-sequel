@@ -65,7 +65,6 @@ State = {
     normal = Color.green .. "[>]",
     fight = Color.red .. "[!]",
     confirm = Color.blue .. "[?]"
-    --debug = "DEBUG",
 }
 
 Current_state = State.normal
@@ -391,7 +390,6 @@ local function render_map()
             else
                 if y == Current_pos.y and x == Current_pos.x then
                     io.write("\u{1f643}")
-                    --io.write("\u{FF30}")
                 else
                     if Maps.main.data[y][x] == "#" then
                         io.write("██")
@@ -413,7 +411,6 @@ local function render_map()
 end
 
 local function render_stats()
-    --local offset_x = 30
     local offset_x = View_distance * 4 + 8
     local offset_y = 2
     print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
