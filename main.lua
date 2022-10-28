@@ -46,6 +46,7 @@ View_distance = 4
 ESCAPE_CHAR = string.char(27)
 
 Json = require("src/utils/json")
+Cursor_util = require("src/utils/cursor_util")
 Input_reader = require("src/input_reader")
 
 Events = require("src/events")
@@ -62,7 +63,6 @@ Speed = {
 }
 
 Text_buffer = {}
--- Cursor_pos_buffer = { x = 1, y = 1 }
 
 State = {
     normal = Color.green .. "[>]",
@@ -234,7 +234,7 @@ local function welcome_screen()
     print_fancy("the sequel", Speed.slow, 3000)
     local offset_y = 0
     for _=0,13 do
-        set_cursor_pos(0, offset_y)
+        Cursor_util.set_cursor_pos(0, offset_y)
         io.write(ESCAPE_CHAR .. "[K")
         io.flush()
         sleep(150)
@@ -396,9 +396,9 @@ end
 local function render_stats()
     local offset_x = View_distance * 4 + 8
     local offset_y = 2
-    print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
-    print_in_pos(Color.light_blue .. "Level " .. Player.level, { offset_x, offset_y + 1 })
-    print_in_pos(Color.light_green .. "Attack " .. Player.attack .. Color.reset, { offset_x, offset_y + 2 })
+    Cursor_util.print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
+    Cursor_util.print_in_pos(Color.light_blue .. "Level " .. Player.level, { offset_x, offset_y + 1 })
+    Cursor_util.print_in_pos(Color.light_green .. "Attack " .. Player.attack .. Color.reset, { offset_x, offset_y + 2 })
 end
 
 local function render_ui()
