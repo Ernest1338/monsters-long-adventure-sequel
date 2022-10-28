@@ -1,4 +1,8 @@
-local function load_map(map_name)
+Json = require("src/utils/json")
+
+Maps = {}
+
+function load_map(map_name)
     local map = {}
     local map_file = "maps/" .. map_name .. ".txt"
     local index = 1
@@ -13,11 +17,17 @@ local function load_map(map_name)
     return map
 end
 
-Maps = {
-    main = {
-        data = load_map("main"),
-        regions = {},
-    },
-}
+function Maps.load_maps()
+    local maps_file = assert(io.open("maps/maps.json", "rb"))
+    local maps = Json.decode(maps_file:read("*all"))
+    for k, v in pairs(maps) do
+        maps[k].data = load_map(maps[k].map_name)
+    end
+    return maps
+end
+
+-- function Maps.save_map()
+--
+-- end
 
 return Maps
