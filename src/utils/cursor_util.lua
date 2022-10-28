@@ -20,6 +20,7 @@ function Cursor_util.print_in_pos(text, pos)
     Cursor_util.set_cursor_pos(pos[1], pos[2])
     io.write(text)
     Cursor_util.restore_cursor_pos()
+    io.flush()
 end
 
 return Cursor_util

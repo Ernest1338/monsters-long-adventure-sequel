@@ -2,7 +2,7 @@ Json = require("src/utils/json")
 
 Maps = {}
 
-function load_map(map_name)
+local function load_map(map_name)
     local map = {}
     local map_file = "maps/" .. map_name .. ".txt"
     local index = 1
@@ -20,7 +20,7 @@ end
 function Maps.load_maps()
     local maps_file = assert(io.open("maps/maps.json", "rb"))
     local maps = Json.decode(maps_file:read("*all"))
-    for k, v in pairs(maps) do
+    for k, _ in pairs(maps) do
         maps[k].data = load_map(maps[k].map_name)
     end
     return maps
