@@ -1,0 +1,16 @@
+{
+   "main":{
+      "map_name": "main",
+      "data": "",
+      "regions":{
+
+      }
+   },
+   "forest":{
+      "map_name": "forest",
+      "data": "",
+      "regions":{
+
+      }
+   }
+}
