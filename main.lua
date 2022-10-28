@@ -230,22 +230,34 @@ local function prompt()
 end
 
 local function welcome_screen()
+    local function print_and_sleep(text, time)
+        print(text)
+        sleep(time)
+    end
     clear_screen()
-    print([[
-
-     _ __ ___   ___  _ __  ___| |_ ___ _ __ ___          | | ___  _ __   __ _
-    | '_ ` _ \ / _ \| '_ \/ __| __/ _ \ '__/ __|  _____  | |/ _ \| '_ \ / _` |
-    | | | | | | (_) | | | \__ \ ||  __/ |  \__ \ |_____| | | (_) | | | | (_| |
-    |_| |_| |_|\___/|_| |_|___/\__\___|_|  |___/         |_|\___/|_| |_|\__, |
-                                                                        |___/
-                         _                 _
-                __ _  __| |_   _____ _ __ | |_ _   _ _ __ ___
-               / _` |/ _` \ \ / / _ \ '_ \| __| | | | '__/ _ \
-              | (_| | (_| |\ V /  __/ | | | |_| |_| | | |  __/
-               \__,_|\__,_| \_/ \___|_| |_|\__|\__,_|_|  \___|
-
-                                the sequel
-    ]])
+    sleep(1000)
+    print()
+    print_and_sleep([[     _ __ ___   ___  _ __  ___| |_ ___ _ __ ___          | | ___  _ __   __ _]], 200)
+    print_and_sleep([[    | '_ ` _ \ / _ \| '_ \/ __| __/ _ \ '__/ __|  _____  | |/ _ \| '_ \ / _` |]], 200)
+    print_and_sleep([[    | | | | | | (_) | | | \__ \ ||  __/ |  \__ \ |_____| | | (_) | | | | (_| |]], 200)
+    print_and_sleep([[    |_| |_| |_|\___/|_| |_|___/\__\___|_|  |___/         |_|\___/|_| |_|\__, |]], 200)
+    print_and_sleep([[                                                                        |___/]], 200)
+    print_and_sleep([[                         _                 _]], 200)
+    print_and_sleep([[                __ _  __| |_   _____ _ __ | |_ _   _ _ __ ___]], 200)
+    print_and_sleep([[               / _` |/ _` \ \ / / _ \ '_ \| __| | | | '__/ _ \]], 200)
+    print_and_sleep([[              | (_| | (_| |\ V /  __/ | | | |_| |_| | | |  __/]], 200)
+    print_and_sleep([[               \__,_|\__,_| \_/ \___|_| |_|\__|\__,_|_|  \___|]], 200)
+    print_and_sleep("", 1000)
+    io.write([[                                ]])
+    print_fancy("the sequel", Speed.slow, 3000)
+    local offset_y = 0
+    for _=0,13 do
+        set_cursor_pos(0, offset_y)
+        io.write(ESCAPE_CHAR .. "[K")
+        io.flush()
+        sleep(200)
+        offset_y = offset_y + 1
+    end
 end
 
 local function print_help_screen()
@@ -532,7 +544,6 @@ function Main()
         sleep(1000)
         prologue()
         welcome_screen()
-        sleep(5000)
     end
     clear_screen()
     render_ui()
