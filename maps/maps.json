@@ -1,0 +1,29 @@
+{
+   "main":{
+      "map_name": "main",
+      "data": "",
+      "regions":[
+          {
+              "name": "cos1",
+              "x1": 12,
+              "y1": 13,
+              "x2": 12,
+              "y2": 13
+          },
+          {
+              "name": "cos2",
+              "x1": 12,
+              "y1": 13,
+              "x2": 12,
+              "y2": 13
+          }
+      ]
+   },
+   "forest":{
+      "map_name": "forest",
+      "data": "",
+      "regions":{
+
+      }
+   }
+}

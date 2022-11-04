@@ -45,11 +45,14 @@ View_distance = 4
 
 ESCAPE_CHAR = string.char(27)
 
+Cursor_util = require("src/utils/cursor_util")
+Input_reader = require("src/input_reader")
+
 Events = require("src/events")
 Items = require("src/items")
 Monsters = require("src/monsters")
 Color = require("src/colors")
-Maps = require("src/maps")
+Maps = require("src/maps").load_maps()
 
 Speed = {
     normal = 1,
@@ -59,7 +62,6 @@ Speed = {
 }
 
 Text_buffer = {}
--- Cursor_pos_buffer = { x = 1, y = 1 }
 
 State = {
     normal = Color.green .. "[>]",
@@ -89,26 +91,6 @@ local function sleep(ms)
         local timer = assert(io.popen("sleep " .. ms / 1000))
         timer:close()
     end
-end
-
-local function set_cursor_pos(x, y)
-    io.write(ESCAPE_CHAR .. "[" .. y .. ";" .. x .. "H")
-end
-
-local function save_cursor_pos()
-    io.write(ESCAPE_CHAR .. "[s")
-end
-
-local function restore_cursor_pos()
-    io.write(ESCAPE_CHAR .. "[u")
-end
-
--- TODO: This shouldn't use saveCursorPos() because it may overwrite user's wanted data
-local function print_in_pos(text, pos)
-    save_cursor_pos()
-    set_cursor_pos(pos[1], pos[2])
-    io.write(text)
-    restore_cursor_pos()
 end
 
 local function print_fancy(message, speed, after_sleep)
@@ -251,7 +233,7 @@ local function welcome_screen()
     print_fancy("the sequel", Speed.slow, 3000)
     local offset_y = 0
     for _=0,13 do
-        set_cursor_pos(0, offset_y)
+        Cursor_util.set_cursor_pos(0, offset_y)
         io.write(ESCAPE_CHAR .. "[K")
         io.flush()
         sleep(150)
@@ -260,6 +242,7 @@ local function welcome_screen()
 end
 
 local function print_help_screen()
+    -- TODO: refactor
     print_text("Currently available actions:")
     if Current_state == State.normal then
         print_text([[    move in a direction (north, east, south, west) - go, g
@@ -327,31 +310,31 @@ local function handle_event(event)
     end
 end
 
-local function handle_position(direction)
+local function handle_position(key)
     -- this can surely be improved
-    direction = string.lower(direction)
-    if direction == "north" or direction == "n" or direction == "up" or direction == "u" then
+    local arrow = Input_reader.Key_code.arrow
+    if key == arrow.up then
         local map_element = Maps.main.data[Current_pos.y - 1][Current_pos.x]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
         Current_pos.y = Current_pos.y - 1
-    elseif direction == "east" or direction == "e" or direction == "right" or direction == "r" then
+    elseif key == arrow.right then
         local map_element = Maps.main.data[Current_pos.y][Current_pos.x + 1]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
         Current_pos.x = Current_pos.x + 1
-    elseif direction == "south" or direction == "s" or direction == "down" or direction == "d" then
+    elseif key == arrow.down then
         local map_element = Maps.main.data[Current_pos.y + 1][Current_pos.x]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
             return
         end
         Current_pos.y = Current_pos.y + 1
-    elseif direction == "west" or direction == "w" or direction == "left" or direction == "l" then
+    elseif key == arrow.left then
         local map_element = Maps.main.data[Current_pos.y][Current_pos.x - 1]
         if map_element == "#" or map_element == nil then
             print_text("Wrong direction")
@@ -413,9 +396,9 @@ end
 local function render_stats()
     local offset_x = View_distance * 4 + 8
     local offset_y = 2
-    print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
-    print_in_pos(Color.light_blue .. "Level " .. Player.level, { offset_x, offset_y + 1 })
-    print_in_pos(Color.light_green .. "Attack " .. Player.attack .. Color.reset, { offset_x, offset_y + 2 })
+    Cursor_util.print_in_pos(Color.red .. "Health " .. Player.health .. " / " .. Player.max_hp, { offset_x, offset_y })
+    Cursor_util.print_in_pos(Color.light_blue .. "Level " .. Player.level, { offset_x, offset_y + 1 })
+    Cursor_util.print_in_pos(Color.light_green .. "Attack " .. Player.attack .. Color.reset, { offset_x, offset_y + 2 })
 end
 
 local function render_ui()
@@ -486,40 +469,25 @@ local function print_player_stats()
     end
 end
 
-local function handle_action(action)
-    action = split_into_words(action)
-    if action[1] == "quit" or action[1] == "q" then
+local function handle_action(key)
+    local Key_code = Input_reader.Key_code
+    if key == "q" then
         -- TODO: save state
         -- TODO: ask: are you sure you want to quit? make sure you saved your game
         set_color(Color.yellow)
         print("\nBye bye!\n")
         reset_color()
         os.exit(0)
-    elseif action[1] == "use" or action[1] == "u" then
-        if action[2] == nil then
-            -- TODO: ask player for which item to use (display backpack) and use it
-            print_text("Usage: use <item name> (use \"backpack\" for item list)")
-            return
-        end
-        local item = item_name_to_object(string.lower(action[2]))
-        if item == nil then
-            print_text("Item " .. action[2] .. " doesn't exist")
-            return
-        end
-        use(item)
-    elseif action[1] == "help" or action[1] == "?" then
+    elseif key == "u" then
+        -- TODO: handle selecting an item
+        -- use(item)
+    elseif key == "?" or key == "h" then
         print_help_screen()
-    elseif action[1] == "clear" then
-        clear_screen()
-    elseif action[1] == "go" or action[1] == "g" then
-        if action[2] == nil then
-            print_text("Usage: go <direction> (north(up), east(right), south(down), west(left))")
-            return
-        end
-        handle_position(action[2])
-    elseif action[1] == "backpack" or action[1] == "b" then
+    elseif table_contains(Key_code.arrow, key) then
+        handle_position(key)
+    elseif key == "b" then
         show_backpack()
-    elseif action[1] == "stats" or action[1] == "s" then
+    elseif key == "s" then
         print_player_stats()
     else
         print_text("Action not found, type \"" ..
@@ -547,11 +515,15 @@ function Main()
     render_ui()
     print("type \"help\" to get action list")
 
-    local user_input = prompt()
+    -- local user_input = prompt()
+    local user_input = Input_reader.read_key()
 
     -- game loop
     while true do
         clear_screen()
+
+        debug(user_input)
+
         handle_action(user_input)
         render_ui()
         handle_text_buffer()
@@ -559,7 +531,8 @@ function Main()
         debug(dump_table(Player))
         debug(dump_table(Current_pos))
 
-        user_input = prompt()
+        -- user_input = prompt()
+        user_input = Input_reader.read_key()
     end
 end
 

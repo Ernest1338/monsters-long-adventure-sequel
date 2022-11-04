@@ -6,11 +6,11 @@ Type = {
 
 Monsters = {
     -- TODO: health and attack random range (scale with level)
-    Zombie = { name = "zombie", type = Type.hostile, health = 100, attack = 10 },
-    Spider = { name = "spider", type = Type.hostile, health = 100, attack = 10 },
-    Skeleton = { name = "skeleton", type = Type.hostile, health = 100, attack = 10 },
-    Demogorgon = { name = "demogorgon", type = Type.hostile, health = 100, attack = 10 },
-    Slenderman = { name = "slenderman", type = Type.hostile, health = 100, attack = 10 },
+    zombie = { name = "zombie", type = Type.hostile, health = 100, attack = 10 },
+    spider = { name = "spider", type = Type.hostile, health = 100, attack = 10 },
+    skeleton = { name = "skeleton", type = Type.hostile, health = 100, attack = 10 },
+    demogorgon = { name = "demogorgon", type = Type.hostile, health = 100, attack = 10 },
+    slenderman = { name = "slenderman", type = Type.hostile, health = 100, attack = 10 },
 }
 
 return Monsters
