@@ -62,6 +62,7 @@ Speed = {
 }
 
 Text_buffer = {}
+Living_monsters = {}
 
 State = {
     normal = Color.green .. "[>]",
@@ -495,7 +496,43 @@ local function handle_action(key)
     end
 end
 
+local function handle_regions()
+    print("handling regions")
+    for _, map in pairs(Maps) do
+        for _, region in pairs(map.regions) do
+            local road_data = {}
+            for x = region.x1, region.x2 do
+                for y = region.y1, region.y2 do
+                    if map.data[y][x] == " " then
+                        table.insert(road_data, { x = x, y = y })
+                    end
+                end
+            end
+            print_text("" .. math.random(1, 10))
+            local monster_count = math.ceil(#road_data / 10)
+            for i = 1, monster_count do
+                local rolled_position = road_data[math.random(#road_data)]
+                local rolled_monster = nil
+                local chance_sum = 0
+                for _, monster in pairs(region.chances) do
+                    chance_sum = chance_sum + monster.chance
+                end
+                local rolled_chance = math.random(10, chance_sum * 10) / 10
+                for _, monster in pairs(region.chances) do
+                    rolled_chance = rolled_chance - monster.chance
+                    if rolled_chance <= 0 then
+                        rolled_monster = monster
+                        break
+                    end
+                end
+                if rolled_position ~= nil then map.data[rolled_position.y][rolled_position.x] = "X" end
+            end
+        end
+    end
+end
+
 function Main()
+    math.randomseed(os.time())
     clear_screen()
 
     debug(dump_table(Events))
@@ -504,6 +541,8 @@ function Main()
     debug(dump_table(Maps.main.data))
     debug("PRESS ANY KEY TO START THE GAME")
     if Is_debug then prompt() end
+
+    handle_regions()
 
     if not Skip_prologue then
         sleep(1000)
